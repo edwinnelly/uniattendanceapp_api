@@ -50,10 +50,11 @@ class StudentController extends Controller
         $this->checkAdmin();
         
         $programs = Program::where('is_active', true)->orderBy('name')->get();
-        $levels = Level::with('program')->orderBy('level_order')->get();
+        $levels = Level::get();
         $departments = Department::where('is_active', true)->orderBy('name')->get();
         $parents = User::where('user_type', 'parent')->orderBy('name')->get();
 
+        
         return view('admin.students.create', compact('programs', 'levels', 'departments', 'parents'));
     }
 

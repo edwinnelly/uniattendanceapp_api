@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Crypt;
 class ProgramController extends Controller
 {
 
- private function checkAdmin()
+    private function checkAdmin()
     {
         // Check if user is logged in
         if (!auth()->check()) {
@@ -20,7 +20,7 @@ class ProgramController extends Controller
 
         // Check if user is admin
         if (auth()->user()->user_type !== 'admin') {
-            
+
             abort(403, 'Unauthorized action.');
         }
     }
@@ -31,53 +31,88 @@ class ProgramController extends Controller
      */
     public function index()
     {
-         $this->checkAdmin();
-        $programs = Program::with(['department', 'levels', 'students'])
-            ->withCount(['students', 'levels'])
-            ->orderBy('name')
-            ->get();
-
+        $this->checkAdmin();
+        $programs = Program::orderBy('name')->get();
+        // dd($programs);
         return view('admin.programs.index', compact('programs'));
+    }
+
+    public function toggle($id)
+    {
+        $program = Program::findOrFail(decrypt($id));
+        $program->update(['is_active' => !$program->is_active]);
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_active' => $program->is_active,
+            ]);
+        }
+
+        return back()->with('success', 'Program status updated.');
     }
 
     /**
      * Show the form for creating a new resource.
      */
+    // public function create()
+    // {
+    //     $this->checkAdmin();
+    //     $departments = Department::where('is_active', true)
+    //         ->orderBy('name')
+    //         ->get(['id', 'name', 'code']);
+
+    //     return view('admin.programs.create', compact('departments'));
+    // }
+
+    // /**
+    //  * Store a newly created resource in storage.
+    //  */
+    // public function store(Request $request)
+    // {
+    //     $this->checkAdmin();
+    //     $request->validate([
+    //         'department_id' => 'required|exists:departments,id',
+    //         'name' => 'required|string|max:150',
+    //         'code' => 'required|string|max:20|unique:programs',
+    //         'duration_years' => 'required|integer|min:1|max:6',
+    //         'description' => 'nullable|string',
+    //         'is_active' => 'boolean',
+    //     ]);
+
+    //     Program::create([
+    //         'department_id' => $request->department_id,
+    //         'name' => $request->name,
+    //         'code' => strtoupper($request->code),
+    //         'duration_years' => $request->duration_years,
+    //         'description' => $request->description,
+    //         'is_active' => $request->has('is_active'),
+    //     ]);
+
+    //     return back()->with('success', 'Program created successfully');
+    // }
+
     public function create()
     {
-         $this->checkAdmin();
-        $departments = Department::where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'code']);
-
-        return view('admin.programs.create', compact('departments'));
+        return view('admin.programs.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-         $this->checkAdmin();
-        $request->validate([
-            'department_id' => 'required|exists:departments,id',
-            'name' => 'required|string|max:150',
-            'code' => 'required|string|max:20|unique:programs',
-            'duration_years' => 'required|integer|min:1|max:6',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
+        $validated = $request->validate([
+            'name'        => ['required', 'string', 'max:150'],
+            'code'        => ['required', 'string', 'max:20', 'unique:programs,code'],
+            'description' => ['nullable', 'string'],
+            'is_active'   => ['nullable', 'boolean'],
         ]);
 
-        Program::create([
-            'department_id' => $request->department_id,
-            'name' => $request->name,
-            'code' => strtoupper($request->code),
-            'duration_years' => $request->duration_years,
-            'description' => $request->description,
-            'is_active' => $request->has('is_active'),
-        ]);
+        $validated['is_active'] = $request->boolean('is_active');
 
-        return back()->with('success', 'Program created successfully');
+        Program::create($validated);
+
+        return redirect()
+            ->route('programs.index')
+            ->with('success', 'Faculty created.');
     }
 
     /**
@@ -95,13 +130,13 @@ class ProgramController extends Controller
     //     }
     // }
 
-  public function show($encryptedId)
+    public function show($encryptedId)
     {
-         $this->checkAdmin();
+        $this->checkAdmin();
         try {
             $id = Crypt::decrypt($encryptedId);
             $program = Program::findOrFail($id);
-            
+
             return view('admin.programs.show', compact('program'));
         } catch (\Exception $e) {
             abort(404);
@@ -113,11 +148,11 @@ class ProgramController extends Controller
      */
     public function edit($encryptedId)
     {
-         $this->checkAdmin();
+        $this->checkAdmin();
         try {
             $id = Crypt::decrypt($encryptedId);
             $program = Program::findOrFail($id);
-            
+
             $departments = Department::where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name', 'code']);
@@ -131,9 +166,41 @@ class ProgramController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    // public function update(Request $request, $encryptedId)
+    // {
+    //     $this->checkAdmin();
+    //     try {
+    //         $id = Crypt::decrypt($encryptedId);
+    //         $program = Program::findOrFail($id);
+    //     } catch (\Exception $e) {
+    //         abort(404);
+    //     }
+
+    //     $request->validate([
+    //         'department_id' => 'required|exists:departments,id',
+    //         'name' => 'required|string|max:150',
+    //         'code' => 'required|string|max:20|unique:programs,code,' . $program->id,
+    //         'duration_years' => 'required|integer|min:1|max:6',
+    //         'description' => 'nullable|string',
+    //         'is_active' => 'boolean',
+    //     ]);
+
+    //     $program->update([
+    //         'department_id' => $request->department_id,
+    //         'name' => $request->name,
+    //         'code' => strtoupper($request->code),
+    //         'duration_years' => $request->duration_years,
+    //         'description' => $request->description,
+    //         'is_active' => $request->has('is_active'),
+    //     ]);
+
+    //     return back()->with('success', 'Program updated successfully');
+    // }
+
     public function update(Request $request, $encryptedId)
     {
-         $this->checkAdmin();
+        $this->checkAdmin();
+
         try {
             $id = Crypt::decrypt($encryptedId);
             $program = Program::findOrFail($id);
@@ -141,22 +208,18 @@ class ProgramController extends Controller
             abort(404);
         }
 
-        $request->validate([
-            'department_id' => 'required|exists:departments,id',
-            'name' => 'required|string|max:150',
-            'code' => 'required|string|max:20|unique:programs,code,' . $program->id,
-            'duration_years' => 'required|integer|min:1|max:6',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
+        $validated = $request->validate([
+            'name'        => ['required', 'string', 'max:150'],
+            'code'        => ['required', 'string', 'max:20', 'unique:programs,code,' . $program->id],
+            'description' => ['nullable', 'string'],
+            'is_active'   => ['nullable', 'boolean'],
         ]);
 
         $program->update([
-            'department_id' => $request->department_id,
-            'name' => $request->name,
-            'code' => strtoupper($request->code),
-            'duration_years' => $request->duration_years,
-            'description' => $request->description,
-            'is_active' => $request->has('is_active'),
+            'name'        => $validated['name'],
+            'code'        => strtoupper($validated['code']),
+            'description' => $validated['description'] ?? null,
+            'is_active'   => $request->boolean('is_active'),
         ]);
 
         return back()->with('success', 'Program updated successfully');
@@ -167,13 +230,13 @@ class ProgramController extends Controller
      */
     public function destroy($encryptedId)
     {
-         $this->checkAdmin();
+        $this->checkAdmin();
         try {
             $id = Crypt::decrypt($encryptedId);
             $program = Program::findOrFail($id);
             $programName = $program->name;
             $program->delete();
-            
+
             return redirect()->route('programs.index')
                 ->with('success', "Program '{$programName}' deleted successfully.");
         } catch (\Exception $e) {

@@ -35,4 +35,11 @@ class Course extends Model
     {
         return $this->hasMany(Timetable::class);
     }
+
+
+
+public function lecturer()
+{
+    return $this->belongsTo(User::class, 'id');
+}
 }

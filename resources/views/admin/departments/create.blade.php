@@ -270,8 +270,10 @@
                             value="{{ old('name') }}" 
                             class="form-input" 
                             placeholder="e.g., Computer Science" 
+                            maxlength="150"
                             required
                         >
+                        <p class="text-xs text-fluent-secondary mt-1">Maximum 150 characters</p>
                         @error('name')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -290,8 +292,25 @@
                             maxlength="20"
                             required
                         >
-                        <p class="text-xs text-fluent-secondary mt-1">Maximum 20 characters, unique code</p>
+                        <p class="text-xs text-fluent-secondary mt-1">Maximum 20 characters, must be unique</p>
                         @error('code')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Faculty (required per schema) -->
+                    <div class="mb-6">
+                        <label for="faculty_id" class="form-label">Faculty <span class="text-red-500">*</span></label>
+                        <select id="faculty_id" name="faculty_id" class="form-select" required>
+                            <option value="">Select Faculty</option>
+                            @foreach($faculties as $faculty)
+                                <option value="{{ $faculty->id }}" {{ old('faculty_id') == $faculty->id ? 'selected' : '' }}>
+                                    {{ $faculty->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-fluent-secondary mt-1">The faculty this department belongs to</p>
+                        @error('faculty_id')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -307,8 +326,27 @@
                                 </option>
                             @endforeach
                         </select>
-                        <p class="text-xs text-fluent-secondary mt-1">Select from available lecturers</p>
+                        <p class="text-xs text-fluent-secondary mt-1">Optional — select from available lecturers</p>
                         @error('head_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Duration Years -->
+                    <div class="mb-6">
+                        <label for="duration_years" class="form-label">Duration (Years) <span class="text-red-500">*</span></label>
+                        <input 
+                            type="number" 
+                            id="duration_years" 
+                            name="duration_years" 
+                            value="{{ old('duration_years', 5) }}" 
+                            class="form-input" 
+                            min="1" 
+                            max="10" 
+                            required
+                        >
+                        <p class="text-xs text-fluent-secondary mt-1">Default is 4 years (typical for undergraduate programs)</p>
+                        @error('duration_years')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>

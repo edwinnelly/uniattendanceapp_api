@@ -44,6 +44,9 @@
                     fontFamily: {
                         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
                     },
+                    boxShadow: {
+                        card: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+                    },
                 }
             }
         }
@@ -104,6 +107,10 @@
             box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
         }
         
+        .form-input.error {
+            border-color: #D13438;
+        }
+        
         .form-select {
             width: 100%;
             padding: 10px 14px;
@@ -127,6 +134,10 @@
             outline: none;
             border-color: #0078D4;
             box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
+        }
+        
+        .form-select.error {
+            border-color: #D13438;
         }
         
         .form-label {
@@ -186,7 +197,7 @@
 
     <!-- Page Loader -->
     <div id="pageLoader" class="fixed inset-0 bg-white z-[999] flex items-center justify-center flex-col gap-5 transition-opacity duration-300">
-        <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl animate-bounce-slow">
+        <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl animate-bounce">
             <img src="{{ asset('logo/logo.png') }}" alt="DipTek Logo" class="w-8 h-8">
         </div>
         <div class="text-center">
@@ -240,18 +251,32 @@
 
             <!-- Success/Error Messages -->
             @if(session('success'))
-                <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-4">
-                    {{ session('success') }}
+                <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-4 flex items-start gap-2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                    <span>{{ session('success') }}</span>
                 </div>
             @endif
 
             @if($errors->any())
                 <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4">
-                    <ul class="list-disc list-inside">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                    <div class="flex items-start gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <div>
+                            <p class="font-semibold mb-1">Please fix the following errors:</p>
+                            <ul class="list-disc list-inside text-sm space-y-0.5">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             @endif
 
@@ -269,8 +294,9 @@
                             id="name" 
                             name="name" 
                             value="{{ old('name', $department->name) }}" 
-                            class="form-input" 
+                            class="form-input @error('name') error @enderror" 
                             placeholder="e.g., Computer Science" 
+                            maxlength="150"
                             required
                         >
                         @error('name')
@@ -286,13 +312,30 @@
                             id="code" 
                             name="code" 
                             value="{{ old('code', $department->code) }}" 
-                            class="form-input" 
+                            class="form-input @error('code') error @enderror" 
                             placeholder="e.g., CS" 
                             maxlength="20"
                             required
                         >
-                        <p class="text-xs text-fluent-secondary mt-1">Maximum 20 characters, unique code</p>
+                        <p class="text-xs text-fluent-secondary mt-1">Maximum 20 characters, must be unique</p>
                         @error('code')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Faculty Dropdown (NEW) -->
+                    <div class="mb-6">
+                        <label for="faculty_id" class="form-label">Faculty</label>
+                        <select id="faculty_id" name="faculty_id" class="form-select @error('faculty_id') error @enderror">
+                            <option value="">Select Faculty</option>
+                            @foreach($faculties ?? [] as $faculty)
+                                <option value="{{ $faculty->id }}" {{ old('faculty_id', $department->faculty_id) == $faculty->id ? 'selected' : '' }}>
+                                    {{ $faculty->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-fluent-secondary mt-1">Optional — assign department to a faculty</p>
+                        @error('faculty_id')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -300,16 +343,36 @@
                     <!-- Department Head Dropdown -->
                     <div class="mb-6">
                         <label for="head_id" class="form-label">Department Head</label>
-                        <select id="head_id" name="head_id" class="form-select">
+                        <select id="head_id" name="head_id" class="form-select @error('head_id') error @enderror">
                             <option value="">Select Department Head</option>
                             @foreach($lecturers as $lecturer)
                                 <option value="{{ $lecturer->id }}" {{ old('head_id', $department->head_id) == $lecturer->id ? 'selected' : '' }}>
-                                    {{ $lecturer->name }} - {{ $lecturer->email }}
+                                    {{ $lecturer->name }} — {{ $lecturer->email }}
                                 </option>
                             @endforeach
                         </select>
                         <p class="text-xs text-fluent-secondary mt-1">Select from available lecturers</p>
                         @error('head_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Duration Years (NEW) -->
+                    <div class="mb-6">
+                        <label for="duration_years" class="form-label">Duration (Years) <span class="text-red-500">*</span></label>
+                        <input 
+                            type="number" 
+                            id="duration_years" 
+                            name="duration_years" 
+                            value="{{ old('duration_years', $department->duration_years ?? 4) }}" 
+                            class="form-input @error('duration_years') error @enderror" 
+                            placeholder="e.g., 4" 
+                            min="1"
+                            max="10"
+                            required
+                        >
+                        <p class="text-xs text-fluent-secondary mt-1">Default is 4 years</p>
+                        @error('duration_years')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -321,8 +384,9 @@
                             id="description" 
                             name="description" 
                             rows="4" 
-                            class="form-input" 
+                            class="form-input @error('description') error @enderror" 
                             placeholder="Brief description of the department..."
+                            maxlength="1000"
                         >{{ old('description', $department->description) }}</textarea>
                         @error('description')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -344,7 +408,7 @@
                     </div>
 
                     <!-- Form Actions -->
-                    <div class="flex gap-3">
+                    <div class="flex flex-wrap gap-3">
                         <button type="submit" class="btn-sleek btn-sleek-primary inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-xl text-sm font-semibold tracking-wide">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
@@ -384,30 +448,33 @@
         const mobileRightToggle = document.getElementById('mobileRightToggle');
 
         function closeAllSidebars() {
-            sidebarLeft.classList.remove('open');
-            sidebarRight.classList.remove('open');
-            overlay.classList.remove('active');
-            overlay.style.display = 'none';
+            sidebarLeft?.classList.remove('open');
+            sidebarRight?.classList.remove('open');
+            overlay?.classList.remove('active');
+            if (overlay) overlay.style.display = 'none';
         }
 
         function openSidebar(sidebar) {
+            if (!sidebar) return;
             closeAllSidebars();
             sidebar.classList.add('open');
-            overlay.style.display = 'block';
-            setTimeout(() => overlay.classList.add('active'), 10);
+            if (overlay) {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.classList.add('active'), 10);
+            }
         }
 
-        mobileToggle.addEventListener('click', (e) => {
+        mobileToggle?.addEventListener('click', (e) => {
             e.stopPropagation();
-            sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
+            sidebarLeft?.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
         });
 
-        mobileRightToggle.addEventListener('click', (e) => {
+        mobileRightToggle?.addEventListener('click', (e) => {
             e.stopPropagation();
-            sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
+            sidebarRight?.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
         });
 
-        overlay.addEventListener('click', closeAllSidebars);
+        overlay?.addEventListener('click', closeAllSidebars);
     </script>
 </body>
 

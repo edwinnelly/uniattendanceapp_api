@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Course — DipTek Attendance</title>
-    
+
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,13 +54,13 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        
+
         #pageLoader.hidden {
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
         }
-        
+
         ::-webkit-scrollbar {
             width: 5px;
         }
@@ -71,7 +71,7 @@
             background: #cbd5e1;
             border-radius: 10px;
         }
-        
+
         .btn-sleek {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -86,7 +86,7 @@
             background: linear-gradient(180deg, #106EBE 0%, #0F5E9E 100%);
             box-shadow: 0 4px 8px rgba(0,120,212,0.25);
         }
-        
+
         .form-input {
             width: 100%;
             padding: 10px 14px;
@@ -97,13 +97,21 @@
             background: white;
             transition: all 0.2s;
         }
-        
+
         .form-input:focus {
             outline: none;
             border-color: #0078D4;
             box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
         }
-        
+
+        .form-input.is-invalid {
+            border-color: #D13438;
+        }
+
+        .form-input.is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(209, 52, 56, 0.1);
+        }
+
         .form-select {
             width: 100%;
             padding: 10px 14px;
@@ -122,13 +130,17 @@
             background-position: right 14px center;
             padding-right: 40px;
         }
-        
+
         .form-select:focus {
             outline: none;
             border-color: #0078D4;
             box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
         }
-        
+
+        .form-select.is-invalid {
+            border-color: #D13438;
+        }
+
         .form-label {
             display: block;
             font-size: 13px;
@@ -136,7 +148,7 @@
             color: #1B1A19;
             margin-bottom: 6px;
         }
-        
+
         @media (max-width: 1024px) {
             .sidebar-left {
                 position: fixed;
@@ -264,7 +276,7 @@
                     <!-- Department Dropdown -->
                     <div class="mb-6">
                         <label for="department_id" class="form-label">Department <span class="text-red-500">*</span></label>
-                        <select id="department_id" name="department_id" class="form-select" required>
+                        <select id="department_id" name="department_id" class="form-select @error('department_id') is-invalid @enderror" required>
                             <option value="">Select Department</option>
                             @foreach($departments as $department)
                                 <option value="{{ $department->id }}" {{ old('department_id', $course->department_id) == $department->id ? 'selected' : '' }}>
@@ -277,19 +289,18 @@
                         @enderror
                     </div>
 
-                    <!-- Level Dropdown -->
+                    <!-- Lecturer Dropdown -->
                     <div class="mb-6">
-                        <label for="level_id" class="form-label">Level (Optional)</label>
-                        <select id="level_id" name="level_id" class="form-select">
-                            <option value="">All Levels</option>
-                            @foreach($levels as $level)
-                                <option value="{{ $level->id }}" {{ old('level_id', $course->level_id) == $level->id ? 'selected' : '' }}>
-                                    {{ $level->name }} - {{ $level->program->name }}
+                        <label for="lecturer_id" class="form-label">Lecturer <span class="text-red-500">*</span></label>
+                        <select id="lecturer_id" name="lecturer_id" class="form-select @error('lecturer_id') is-invalid @enderror" required>
+                            <option value="">Select Lecturer</option>
+                            @foreach($lecturers as $lecturer)
+                                <option value="{{ $lecturer->id }}" {{ old('lecturer_id', $course->lecturer_id) == $lecturer->id ? 'selected' : '' }}>
+                                    {{ $lecturer->name }} ({{ $lecturer->email }})
                                 </option>
                             @endforeach
                         </select>
-                        <p class="text-xs text-fluent-secondary mt-1">Select specific level or leave empty for all levels</p>
-                        @error('level_id')
+                        @error('lecturer_id')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -297,16 +308,18 @@
                     <!-- Course Code -->
                     <div class="mb-6">
                         <label for="code" class="form-label">Course Code <span class="text-red-500">*</span></label>
-                        <input 
-                            type="text" 
-                            id="code" 
-                            name="code" 
-                            value="{{ old('code', $course->code) }}" 
-                            class="form-input" 
-                            placeholder="e.g., CSC 101" 
+                        <input
+                            type="text"
+                            id="code"
+                            name="code"
+                            value="{{ old('code', $course->code) }}"
+                            class="form-input @error('code') is-invalid @enderror"
+                            placeholder="e.g., CSC 101"
                             maxlength="20"
                             required
+                            autofocus
                         >
+                        <p class="text-xs text-fluent-secondary mt-1">Unique identifier for the course (max 20 characters).</p>
                         @error('code')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -315,13 +328,13 @@
                     <!-- Course Title -->
                     <div class="mb-6">
                         <label for="title" class="form-label">Course Title <span class="text-red-500">*</span></label>
-                        <input 
-                            type="text" 
-                            id="title" 
-                            name="title" 
-                            value="{{ old('title', $course->title) }}" 
-                            class="form-input" 
-                            placeholder="e.g., Introduction to Programming" 
+                        <input
+                            type="text"
+                            id="title"
+                            name="title"
+                            value="{{ old('title', $course->title) }}"
+                            class="form-input @error('title') is-invalid @enderror"
+                            placeholder="e.g., Introduction to Programming"
                             maxlength="200"
                             required
                         >
@@ -333,8 +346,7 @@
                     <!-- Credit Hours -->
                     <div class="mb-6">
                         <label for="credit_hours" class="form-label">Credit Hours <span class="text-red-500">*</span></label>
-                        <select id="credit_hours" name="credit_hours" class="form-select" required>
-                            <option value="">Select Credit Hours</option>
+                        <select id="credit_hours" name="credit_hours" class="form-select @error('credit_hours') is-invalid @enderror" required>
                             @for($i = 1; $i <= 6; $i++)
                                 <option value="{{ $i }}" {{ old('credit_hours', $course->credit_hours) == $i ? 'selected' : '' }}>
                                     {{ $i }} Credit {{ $i == 1 ? 'Hour' : 'Hours' }}
@@ -349,11 +361,11 @@
                     <!-- Description -->
                     <div class="mb-6">
                         <label for="description" class="form-label">Description</label>
-                        <textarea 
-                            id="description" 
-                            name="description" 
-                            rows="4" 
-                            class="form-input" 
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="4"
+                            class="form-input @error('description') is-invalid @enderror"
                             placeholder="Brief description of the course..."
                         >{{ old('description', $course->description) }}</textarea>
                         @error('description')
@@ -364,10 +376,10 @@
                     <!-- Active Status -->
                     <div class="mb-8">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input 
-                                type="checkbox" 
-                                name="is_active" 
-                                value="1" 
+                            <input
+                                type="checkbox"
+                                name="is_active"
+                                value="1"
                                 {{ old('is_active', $course->is_active) ? 'checked' : '' }}
                                 class="w-4 h-4 text-fluent-blue border-fluent-border rounded focus:ring-fluent-blue"
                             >
@@ -408,7 +420,6 @@
             }, 200);
         });
 
-        // Mobile toggle
         const sidebarLeft = document.getElementById('sidebarLeft');
         const sidebarRight = document.getElementById('sidebarRight');
         const overlay = document.getElementById('sidebarOverlay');
@@ -416,30 +427,41 @@
         const mobileRightToggle = document.getElementById('mobileRightToggle');
 
         function closeAllSidebars() {
-            sidebarLeft.classList.remove('open');
-            sidebarRight.classList.remove('open');
-            overlay.classList.remove('active');
-            overlay.style.display = 'none';
+            if (sidebarLeft) sidebarLeft.classList.remove('open');
+            if (sidebarRight) sidebarRight.classList.remove('open');
+            if (overlay) {
+                overlay.classList.remove('active');
+                overlay.style.display = 'none';
+            }
         }
 
         function openSidebar(sidebar) {
             closeAllSidebars();
+            if (!sidebar) return;
             sidebar.classList.add('open');
-            overlay.style.display = 'block';
-            setTimeout(() => overlay.classList.add('active'), 10);
+            if (overlay) {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.classList.add('active'), 10);
+            }
         }
 
-        mobileToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
-        });
+        if (mobileToggle && sidebarLeft) {
+            mobileToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
+            });
+        }
 
-        mobileRightToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
-        });
+        if (mobileRightToggle && sidebarRight) {
+            mobileRightToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
+            });
+        }
 
-        overlay.addEventListener('click', closeAllSidebars);
+        if (overlay) {
+            overlay.addEventListener('click', closeAllSidebars);
+        }
     </script>
 </body>
 

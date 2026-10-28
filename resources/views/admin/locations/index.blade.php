@@ -104,26 +104,6 @@
             box-shadow: 0 4px 8px rgba(0, 120, 212, 0.25);
         }
 
-        .btn-sleek-success {
-            background: linear-gradient(180deg, #107C10 0%, #0D6B0D 100%);
-            border: 1px solid #0D6B0D;
-        }
-
-        .btn-sleek-success:hover {
-            background: linear-gradient(180deg, #0D6B0D 0%, #0A5A0A 100%);
-            box-shadow: 0 4px 8px rgba(16, 124, 16, 0.25);
-        }
-
-        .btn-sleek-danger {
-            background: linear-gradient(180deg, #D13438 0%, #B82D31 100%);
-            border: 1px solid #B82D31;
-        }
-
-        .btn-sleek-danger:hover {
-            background: linear-gradient(180deg, #B82D31 0%, #A0282C 100%);
-            box-shadow: 0 4px 8px rgba(209, 52, 56, 0.25);
-        }
-
         /* DataTables Custom Styling */
         .dataTables_wrapper {
             font-family: 'Inter', sans-serif;
@@ -214,6 +194,21 @@
 
         table.dataTable tbody tr:hover {
             background: #F8F8F8;
+        }
+
+        /* Empty state */
+        table.dataTable tbody td.dataTables_empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #605E5C;
+            font-size: 14px;
+        }
+
+        /* Responsive expand button */
+        table.dataTable.dtr-inline.collapsed>tbody>tr>td.dtr-control:before {
+            background-color: #0078D4;
+            border: none;
+            box-shadow: none;
         }
 
         .status-badge {
@@ -406,7 +401,9 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-fluent-secondary uppercase tracking-wide">Total Locations</p>
-                            <p class="text-2xl font-bold text-fluent-text mt-1">{{ $locations->total() }}</p>
+                            <p class="text-2xl font-bold text-fluent-text mt-1">
+                                {{ method_exists($locations, 'total') ? $locations->total() : $locations->count() }}
+                            </p>
                         </div>
                         <div class="w-10 h-10 rounded-full bg-fluent-lightBlue flex items-center justify-center">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0078D4" stroke-width="2">
@@ -437,7 +434,7 @@
                         <div>
                             <p class="text-xs text-fluent-secondary uppercase tracking-wide">Total Capacity</p>
                             <p class="text-2xl font-bold text-fluent-text mt-1">
-                                {{ $locations->sum('capacity') ?? 'N/A' }}
+                                {{ $locations->sum('capacity') ?: 'N/A' }}
                             </p>
                         </div>
                         <div class="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center">
@@ -470,7 +467,7 @@
 
             <!-- Locations Table with DataTables -->
             <div class="bg-white rounded-2xl p-4 border border-fluent-border">
-                <table id="locationsTable" class="display responsive nowrap" style="width:100%">
+                <table id="locationsTable" class="display responsive" style="width:100%">
                     <thead>
                         <tr>
                             <th>S/N</th>
@@ -558,7 +555,8 @@
                                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                             </svg>
                                         </a>
-                                        <button onclick="confirmDelete('{{ encrypt($location->id) }}', '{{ $location->name }}')"
+                                        <button type="button"
+                                            onclick="confirmDelete('{{ encrypt($location->id) }}', {{ json_encode($location->name) }})"
                                             class="p-1.5 rounded text-fluent-error hover:bg-fluent-error/10 transition-colors"
                                             title="Delete">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -568,33 +566,11 @@
                                                 <line x1="14" y1="11" x2="14" y2="17" />
                                             </svg>
                                         </button>
-                                        {{-- <button onclick="toggleStatus('{{ encrypt($location->id) }}', '{{ $location->is_active }}')"
-                                            class="p-1.5 rounded {{ $location->is_active ? 'text-fluent-success hover:bg-green-50' : 'text-fluent-secondary hover:bg-gray-50' }} transition-colors"
-                                            title="{{ $location->is_active ? 'Deactivate' : 'Activate' }}">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <polyline points="12 6 12 12 16 14" />
-                                            </svg>
-                                        </button> --}}
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="9" class="text-center py-8 text-fluent-secondary">
-                                    <div class="flex flex-col items-center gap-2">
-                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#605E5C" stroke-width="1.5">
-                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                                            <circle cx="12" cy="9" r="2.5"/>
-                                        </svg>
-                                        <span class="text-sm">No lecture locations found</span>
-                                        <a href="{{ route('lecture-locations.create') }}" class="text-fluent-blue hover:underline text-sm">
-                                            Add your first location
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
+                            {{-- DataTables handles empty state via language.emptyTable --}}
                         @endforelse
                     </tbody>
                 </table>
@@ -653,12 +629,19 @@
                 order: [
                     [0, 'asc']
                 ],
+                columnDefs: [{
+                    targets: -1, // Actions (last column)
+                    orderable: false,
+                    searchable: false
+                }],
                 language: {
                     search: "",
                     searchPlaceholder: "Search locations...",
                     lengthMenu: "Show _MENU_ entries",
                     info: "Showing _START_ to _END_ of _TOTAL_ locations",
                     infoEmpty: "No locations found",
+                    emptyTable: "No lecture locations found",
+                    zeroRecords: "No matching locations found",
                     infoFiltered: "(filtered from _MAX_ total)",
                     paginate: {
                         first: "First",
@@ -666,14 +649,10 @@
                         next: "Next",
                         previous: "Previous"
                     }
-                },
-                columnDefs: [
-                    { responsivePriority: 1, targets: [0, 1, 8] },
-                    { responsivePriority: 2, targets: [2] },
-                ]
+                }
             });
 
-            // Auto-hide success messages after 5 seconds
+            // Auto-hide success/error messages after 5 seconds
             setTimeout(function() {
                 $('.bg-green-50, .bg-red-50').fadeOut('slow');
             }, 5000);
@@ -687,62 +666,68 @@
         const mobileRightToggle = document.getElementById('mobileRightToggle');
 
         function closeAllSidebars() {
-            sidebarLeft.classList.remove('open');
-            sidebarRight.classList.remove('open');
-            overlay.classList.remove('active');
-            overlay.style.display = 'none';
+            if (sidebarLeft) sidebarLeft.classList.remove('open');
+            if (sidebarRight) sidebarRight.classList.remove('open');
+            if (overlay) {
+                overlay.classList.remove('active');
+                overlay.style.display = 'none';
+            }
         }
 
         function openSidebar(sidebar) {
+            if (!sidebar) return;
             closeAllSidebars();
             sidebar.classList.add('open');
-            overlay.style.display = 'block';
-            setTimeout(() => overlay.classList.add('active'), 10);
+            if (overlay) {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.classList.add('active'), 10);
+            }
         }
 
-        mobileToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
-        });
+        if (mobileToggle && sidebarLeft) {
+            mobileToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
+            });
+        }
 
-        mobileRightToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
-        });
+        if (mobileRightToggle && sidebarRight) {
+            mobileRightToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
+            });
+        }
 
-        overlay.addEventListener('click', closeAllSidebars);
+        if (overlay) {
+            overlay.addEventListener('click', closeAllSidebars);
+        }
 
         // Delete confirmation
         function confirmDelete(encryptedId, name) {
             document.getElementById('deleteLocationName').textContent = name;
-            document.getElementById('deleteForm').action = '/lecture-locations/' + encryptedId;
-            document.getElementById('deleteModal').classList.remove('hidden');
-            document.getElementById('deleteModal').classList.add('flex');
+            document.getElementById('deleteForm').action = '{{ url('lecture-locations') }}/' + encryptedId;
+            const modal = document.getElementById('deleteModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
         function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.add('hidden');
-            document.getElementById('deleteModal').classList.remove('flex');
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
-        // Close modal on backdrop click
-        document.getElementById('deleteModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeDeleteModal();
-            }
+        // Close modal on backdrop click or Escape
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === this) closeDeleteModal();
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeDeleteModal();
         });
-
-        // Toggle status
-        function toggleStatus(encryptedId, currentStatus) {
-            const action = currentStatus ? 'deactivate' : 'activate';
-            const message = currentStatus ? 
-                'Are you sure you want to deactivate this location?' : 
-                'Are you sure you want to activate this location?';
-            
-            if (confirm(message)) {
-                window.location.href = '/lecture-locations/' + encryptedId + '/toggle-active';
-            }
-        }
     </script>
 </body>
 

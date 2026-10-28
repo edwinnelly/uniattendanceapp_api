@@ -11,6 +11,7 @@ use App\Http\Controllers\SparentController;
 use App\Http\Controllers\LectureLocationController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\DashboardController;
 
 
 use Illuminate\Support\Facades\Route;
@@ -32,9 +33,13 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware('auth')
+    ->name('dashboard');
 
 Route::get('/dashboard_pro', function () {
     return view('dashboard');
@@ -81,6 +86,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/programs/{program}/edit', [ProgramController::class, 'edit'])->name('programs.edit');
     Route::put('/programs/{program}', [ProgramController::class, 'update'])->name('programs.update');
     Route::delete('/programs/{program}', [ProgramController::class, 'destroy'])->name('programs.destroy');
+
+
+    Route::patch('programs/{id}/toggle', [ProgramController::class, 'toggle'])->name('programs.toggle');
+   
 
 
     // this is the route for the levels

@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Level — DipTek Attendance</title>
-    
+
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,13 +54,13 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        
+
         #pageLoader.hidden {
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
         }
-        
+
         ::-webkit-scrollbar {
             width: 5px;
         }
@@ -71,7 +71,7 @@
             background: #cbd5e1;
             border-radius: 10px;
         }
-        
+
         .btn-sleek {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -86,7 +86,7 @@
             background: linear-gradient(180deg, #106EBE 0%, #0F5E9E 100%);
             box-shadow: 0 4px 8px rgba(0,120,212,0.25);
         }
-        
+
         .form-input {
             width: 100%;
             padding: 10px 14px;
@@ -97,38 +97,21 @@
             background: white;
             transition: all 0.2s;
         }
-        
+
         .form-input:focus {
             outline: none;
             border-color: #0078D4;
             box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
         }
-        
-        .form-select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #EDEBE9;
-            border-radius: 10px;
-            font-size: 14px;
-            color: #1B1A19;
-            background: white;
-            transition: all 0.2s;
-            cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23605E5C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 40px;
+
+        .form-input.is-invalid {
+            border-color: #D13438;
         }
-        
-        .form-select:focus {
-            outline: none;
-            border-color: #0078D4;
-            box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
+
+        .form-input.is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(209, 52, 56, 0.1);
         }
-        
+
         .form-label {
             display: block;
             font-size: 13px;
@@ -136,7 +119,7 @@
             color: #1B1A19;
             margin-bottom: 6px;
         }
-        
+
         @media (max-width: 1024px) {
             .sidebar-left {
                 position: fixed;
@@ -258,35 +241,21 @@
                 <form action="{{ route('levels.store') }}" method="POST">
                     @csrf
 
-                    <!-- Program Dropdown -->
-                    <div class="mb-6">
-                        <label for="program_id" class="form-label">Program <span class="text-red-500">*</span></label>
-                        <select id="program_id" name="program_id" class="form-select" required>
-                            <option value="">Select Program</option>
-                            @foreach($programs as $program)
-                                <option value="{{ $program->id }}" {{ old('program_id') == $program->id ? 'selected' : '' }}>
-                                    {{ $program->name }} ({{ $program->code }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('program_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
                     <!-- Level Name -->
                     <div class="mb-6">
                         <label for="name" class="form-label">Level Name <span class="text-red-500">*</span></label>
-                        <input 
-                            type="text" 
-                            id="name" 
-                            name="name" 
-                            value="{{ old('name') }}" 
-                            class="form-input" 
-                            placeholder="e.g., Year 1, Level 100, ND1" 
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value="{{ old('name') }}"
+                            class="form-input @error('name') is-invalid @enderror"
+                            placeholder="e.g., Year 1, Level 100, ND1"
                             maxlength="50"
                             required
+                            autofocus
                         >
+                        <p class="text-xs text-fluent-secondary mt-1">A descriptive name for the level (max 50 characters).</p>
                         @error('name')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -295,35 +264,18 @@
                     <!-- Level Code -->
                     <div class="mb-6">
                         <label for="code" class="form-label">Level Code <span class="text-red-500">*</span></label>
-                        <input 
-                            type="text" 
-                            id="code" 
-                            name="code" 
-                            value="{{ old('code') }}" 
-                            class="form-input" 
-                            placeholder="e.g., YR1, L100, ND1" 
+                        <input
+                            type="text"
+                            id="code"
+                            name="code"
+                            value="{{ old('code') }}"
+                            class="form-input @error('code') is-invalid @enderror"
+                            placeholder="e.g., YR1, L100, ND1"
                             maxlength="20"
                             required
                         >
+                        <p class="text-xs text-fluent-secondary mt-1">A short unique code for the level (max 20 characters).</p>
                         @error('code')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Level Order -->
-                    <div class="mb-6">
-                        <label for="level_order" class="form-label">Level Order <span class="text-red-500">*</span></label>
-                        <input 
-                            type="number" 
-                            id="level_order" 
-                            name="level_order" 
-                            value="{{ old('level_order', 1) }}" 
-                            class="form-input" 
-                            min="1"
-                            required
-                        >
-                        <p class="text-xs text-fluent-secondary mt-1">Order of level (1, 2, 3, 4...)</p>
-                        @error('level_order')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -331,13 +283,17 @@
                     <!-- Description -->
                     <div class="mb-8">
                         <label for="description" class="form-label">Description</label>
-                        <textarea 
-                            id="description" 
-                            name="description" 
-                            rows="4" 
-                            class="form-input" 
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="4"
+                            class="form-input @error('description') is-invalid @enderror"
                             placeholder="Brief description of the level..."
                         >{{ old('description') }}</textarea>
+                        <p class="text-xs text-fluent-secondary mt-1">Optional. Provide additional context for this level.</p>
+                        @error('description')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Form Actions -->
@@ -376,30 +332,41 @@
         const mobileRightToggle = document.getElementById('mobileRightToggle');
 
         function closeAllSidebars() {
-            sidebarLeft.classList.remove('open');
-            sidebarRight.classList.remove('open');
-            overlay.classList.remove('active');
-            overlay.style.display = 'none';
+            if (sidebarLeft) sidebarLeft.classList.remove('open');
+            if (sidebarRight) sidebarRight.classList.remove('open');
+            if (overlay) {
+                overlay.classList.remove('active');
+                overlay.style.display = 'none';
+            }
         }
 
         function openSidebar(sidebar) {
             closeAllSidebars();
+            if (!sidebar) return;
             sidebar.classList.add('open');
-            overlay.style.display = 'block';
-            setTimeout(() => overlay.classList.add('active'), 10);
+            if (overlay) {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.classList.add('active'), 10);
+            }
         }
 
-        mobileToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
-        });
+        if (mobileToggle && sidebarLeft) {
+            mobileToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
+            });
+        }
 
-        mobileRightToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
-        });
+        if (mobileRightToggle && sidebarRight) {
+            mobileRightToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
+            });
+        }
 
-        overlay.addEventListener('click', closeAllSidebars);
+        if (overlay) {
+            overlay.addEventListener('click', closeAllSidebars);
+        }
     </script>
 </body>
 

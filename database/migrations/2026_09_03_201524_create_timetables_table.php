@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('timetables', function (Blueprint $table) {
             $table->id();
+              $table->unsignedBigInteger('department_id');
             $table->unsignedBigInteger('course_id');
-            $table->unsignedBigInteger('lecturer_id');
+            $table->unsignedBigInteger('level_id');
             $table->unsignedBigInteger('location_id');
-            $table->unsignedBigInteger('program_id');
-            $table->unsignedBigInteger('level_id')->nullable(); // Optional: for specific level
+            
+          
             $table->date('date');
             $table->time('start_time');
             $table->time('end_time');
@@ -37,14 +38,11 @@ return new class extends Migration
 
             // Indexes
             $table->index('course_id');
-            $table->index('program_id');
-            $table->index('lecturer_id');
+
+            $table->index('department_id');
             $table->index('location_id');
             $table->index('level_id');
             $table->index('date');
-            $table->index(['lecturer_id', 'date']);
-            $table->index(['location_id', 'date']);
-            $table->index(['course_id', 'date']);
             $table->index('status');
         });
     }

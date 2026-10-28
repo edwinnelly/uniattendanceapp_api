@@ -196,6 +196,21 @@
             background: #F8F8F8;
         }
 
+        /* Empty state styling */
+        table.dataTable tbody td.dataTables_empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #605E5C;
+            font-size: 14px;
+        }
+
+        /* Responsive expand button */
+        table.dataTable.dtr-inline.collapsed>tbody>tr>td.dtr-control:before {
+            background-color: #0078D4;
+            border: none;
+            box-shadow: none;
+        }
+
         @media (max-width: 1024px) {
             .sidebar-left {
                 position: fixed;
@@ -327,23 +342,30 @@
                 </div>
             @endif
 
+            <!-- Error Message -->
+            @if (session('error'))
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <!-- Courses Table with DataTables -->
             <div class="bg-white rounded-2xl p-4 border border-fluent-border">
-                <table id="coursesTable" class="display responsive nowrap" style="width:100%">
+                <table id="coursesTable" class="display responsive" style="width:100%">
                     <thead>
                         <tr>
                             <th>S/N</th>
-                            <th>Course Code</th>
-                            <th>Course Title</th>
+                            <th>Code</th>
+                            <th>Title</th>
                             <th>Department</th>
-                            <th>Level</th>
+                            <th>Lecturer</th>
                             <th>Credit Hours</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($courses as $index => $course)
+                        @forelse ($courses as $index => $course)
                             <tr>
                                 <td class="text-sm font-semibold text-fluent-secondary">{{ $index + 1 }}</td>
                                 <td>
@@ -357,7 +379,11 @@
                                     {{ $course->department ? $course->department->name : 'N/A' }}
                                 </td>
                                 <td class="text-sm">
-                                    {{ $course->level ? $course->level->name : 'All Levels' }}
+                                    @if ($course->lecturer)
+                                        {{ $course->lecturer->name }}
+                                    @else
+                                        <span class="text-fluent-secondary italic">Unassigned</span>
+                                    @endif
                                 </td>
                                 <td class="text-sm font-semibold">
                                     {{ $course->credit_hours }}
@@ -399,10 +425,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="8" class="text-center py-8 text-fluent-secondary">No courses found
-                                </td>
-                            </tr>
+                            {{-- Intentionally empty: DataTables handles "no data" via language.emptyTable --}}
                         @endforelse
                     </tbody>
                 </table>
@@ -427,13 +450,20 @@
                 order: [
                     [0, 'asc']
                 ],
+                columnDefs: [{
+                    targets: -1, // Actions (last column)
+                    orderable: false,
+                    searchable: false
+                }],
                 language: {
                     search: "",
                     searchPlaceholder: "Search courses...",
                     lengthMenu: "Show _MENU_ entries",
                     info: "Showing _START_ to _END_ of _TOTAL_ courses",
                     infoEmpty: "No courses found",
+                    emptyTable: "No courses found",
                     infoFiltered: "(filtered from _MAX_ total)",
+                    zeroRecords: "No matching courses found",
                     paginate: {
                         first: "First",
                         last: "Last",
@@ -452,30 +482,41 @@
         const mobileRightToggle = document.getElementById('mobileRightToggle');
 
         function closeAllSidebars() {
-            sidebarLeft.classList.remove('open');
-            sidebarRight.classList.remove('open');
-            overlay.classList.remove('active');
-            overlay.style.display = 'none';
+            if (sidebarLeft) sidebarLeft.classList.remove('open');
+            if (sidebarRight) sidebarRight.classList.remove('open');
+            if (overlay) {
+                overlay.classList.remove('active');
+                overlay.style.display = 'none';
+            }
         }
 
         function openSidebar(sidebar) {
+            if (!sidebar) return;
             closeAllSidebars();
             sidebar.classList.add('open');
-            overlay.style.display = 'block';
-            setTimeout(() => overlay.classList.add('active'), 10);
+            if (overlay) {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.classList.add('active'), 10);
+            }
         }
 
-        mobileToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
-        });
+        if (mobileToggle && sidebarLeft) {
+            mobileToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
+            });
+        }
 
-        mobileRightToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
-        });
+        if (mobileRightToggle && sidebarRight) {
+            mobileRightToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
+            });
+        }
 
-        overlay.addEventListener('click', closeAllSidebars);
+        if (overlay) {
+            overlay.addEventListener('click', closeAllSidebars);
+        }
     </script>
 </body>
 

@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.dataTables.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -52,6 +52,8 @@
         table.dataTable thead th { background: #FAF9F8; padding: 14px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #605E5C; }
         table.dataTable tbody td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid #EDEBE9; }
         table.dataTable tbody tr:hover { background: #F8F8F8; }
+        table.dataTable tbody td.dataTables_empty { text-align: center; padding: 40px 20px; color: #605E5C; font-size: 14px; }
+        table.dataTable.dtr-inline.collapsed>tbody>tr>td.dtr-control:before { background-color: #0078D4; border: none; box-shadow: none; }
     </style>
 </head>
 
@@ -103,7 +105,7 @@
 
             {{-- Table --}}
             <div class="bg-white rounded-2xl p-4 border border-fluent-border">
-                <table id="attendanceTable" class="display responsive nowrap" style="width:100%">
+                <table id="attendanceTable" class="display responsive" style="width:100%">
                     <thead>
                         <tr>
                             <th>S/N</th>
@@ -134,11 +136,11 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="font-semibold text-sm">{{ $record->timetable->course->title ?? 'N/A' }}</span>
-                                    <p class="text-xs text-fluent-secondary">{{ $record->timetable->course->code ?? '' }}</p>
+                                    <span class="font-semibold text-sm">{{ $record->timetable?->course?->title ?? 'N/A' }}</span>
+                                    <p class="text-xs text-fluent-secondary">{{ $record->timetable?->course?->code ?? '' }}</p>
                                 </td>
                                 <td class="text-sm">
-                                    {{ $record->clock_in_time ? $record->clock_in_time->format('M d, Y') : 'N/A' }}
+                                    {{ $record->session_date ? \Carbon\Carbon::parse($record->session_date)->format('M d, Y') : ($record->clock_in_time ? $record->clock_in_time->format('M d, Y') : 'N/A') }}
                                 </td>
                                 <td class="text-sm font-medium">
                                     {{ $record->clock_in_time ? $record->clock_in_time->format('H:i') : 'N/A' }}
@@ -177,28 +179,12 @@
                                 </td>
                                 <td>
                                     <div class="flex gap-1">
-                                        {{-- <a href="{{ route('attendance.show', encrypt($record->id)) }}"
-                                            class="p-1.5 rounded text-fluent-blue hover:bg-fluent-lightBlue" title="View">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                <circle cx="12" cy="12" r="3" />
-                                            </svg>
-                                        </a> --}}
-                                        {{-- <a href="{{ route('attendance.edit', encrypt($record->id)) }}"
-                                            class="p-1.5 rounded text-fluent-warning hover:bg-fluent-warning/10" title="Edit">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                            </svg>
-                                        </a> --}}
-                                        
+                                        {{-- Action links --}}
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="10" class="text-center py-8 text-fluent-secondary">No attendance records found</td>
-                            </tr>
+                            {{-- DataTables handles empty state via language.emptyTable --}}
                         @endforelse
                     </tbody>
                 </table>
@@ -215,12 +201,20 @@
                 pageLength: 10,
                 lengthMenu: [5, 10, 25, 50],
                 order: [[3, 'desc']],
+                columnDefs: [{
+                    targets: -1, // Actions (last column)
+                    orderable: false,
+                    searchable: false
+                }],
                 language: {
                     search: "",
                     searchPlaceholder: "Search attendance...",
                     lengthMenu: "Show _MENU_ entries",
                     info: "Showing _START_ to _END_ of _TOTAL_ records",
                     infoEmpty: "No records found",
+                    infoFiltered: "(filtered from _MAX_ total)",
+                    emptyTable: "No attendance records found",
+                    zeroRecords: "No matching attendance records found",
                     paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
                 }
             });

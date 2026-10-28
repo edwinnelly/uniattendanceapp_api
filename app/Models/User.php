@@ -98,7 +98,7 @@ class User extends Authenticatable
     // Timetables where this user is the lecturer
     public function timetablesAsLecturer(): HasMany
     {
-        return $this->hasMany(Timetable::class, 'lecturer_id', 'id');
+        return $this->hasMany(Timetable::class, 'id', 'id');
     }
 
     // Notifications

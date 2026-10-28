@@ -13,16 +13,12 @@ return new class extends Migration
     {
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('department_id');
+           
             $table->string('name', 150);
             $table->string('code', 20)->unique();
-            $table->integer('duration_years')->default(4);
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
-            // Indexes
-            $table->index('department_id');
             $table->index('code');
             $table->index('is_active');
         });

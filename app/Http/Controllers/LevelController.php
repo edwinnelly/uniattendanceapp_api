@@ -3,15 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Level;
-use App\Models\Program;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 
 class LevelController extends Controller
 {
-    /**
-     * Check if user is logged in and is admin
-     */
     private function checkAdmin()
     {
         if (!auth()->check()) {
@@ -23,121 +19,73 @@ class LevelController extends Controller
         }
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $this->checkAdmin();
-        
-        $levels = Level::with(['program', 'students'])
-            ->withCount('students')
-            ->orderBy('program_id')
-            ->orderBy('level_order')
-            ->get();
+
+        $levels = Level::get();
 
         return view('admin.levels.index', compact('levels'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $this->checkAdmin();
-        
-        $programs = Program::where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'code']);
 
-        return view('admin.levels.create', compact('programs'));
+        return view('admin.levels.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $this->checkAdmin();
-        
-        $request->validate([
-            'program_id' => 'required|exists:programs,id',
-            'name' => 'required|string|max:50',
-            'code' => 'required|string|max:20',
-            'level_order' => 'required|integer|min:1',
+
+        $validated = $request->validate([
+            'name'        => 'required|string|max:50|unique:levels,name',
+            'code'        => 'required|string|max:20|unique:levels,code',
             'description' => 'nullable|string',
         ]);
 
-        // Check for duplicate name/code within the same program
-        $exists = Level::where('program_id', $request->program_id)
-            ->where(function($query) use ($request) {
-                $query->where('name', $request->name)
-                      ->orWhere('code', $request->code);
-            })
-            ->exists();
+        $validated['code'] = strtoupper($validated['code']);
 
-        if ($exists) {
-            return back()->withErrors(['name' => 'Level name or code already exists for this program.'])->withInput();
-        }
+        Level::create($validated);
 
-        Level::create([
-            'program_id' => $request->program_id,
-            'name' => $request->name,
-            'code' => strtoupper($request->code),
-            'level_order' => $request->level_order,
-            'description' => $request->description,
-        ]);
-
-        return back()->with('success', 'Level created successfully');
+        return redirect()
+            ->route('levels.index')
+            ->with('success', 'Level created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($encryptedId)
     {
         $this->checkAdmin();
-        
+
         try {
             $id = Crypt::decrypt($encryptedId);
-            $level = Level::with(['program', 'students', 'courses'])
-                ->withCount(['students', 'courses'])
-                ->findOrFail($id);
-            
+            $level = Level::findOrFail($id);
+
             return view('admin.levels.show', compact('level'));
         } catch (\Exception $e) {
             abort(404);
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($encryptedId)
     {
         $this->checkAdmin();
-        
+
         try {
             $id = Crypt::decrypt($encryptedId);
             $level = Level::findOrFail($id);
-            
-            $programs = Program::where('is_active', true)
-                ->orderBy('name')
-                ->get(['id', 'name', 'code']);
 
-            return view('admin.levels.edit', compact('level', 'programs'));
+            return view('admin.levels.edit', compact('level'));
         } catch (\Exception $e) {
             abort(404);
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $encryptedId)
     {
         $this->checkAdmin();
-        
+
         try {
             $id = Crypt::decrypt($encryptedId);
             $level = Level::findOrFail($id);
@@ -146,52 +94,50 @@ class LevelController extends Controller
         }
 
         $request->validate([
-            'program_id' => 'required|exists:programs,id',
-            'name' => 'required|string|max:50',
-            'code' => 'required|string|max:20',
-            'level_order' => 'required|integer|min:1',
+            'name'        => 'required|string|max:50',
+            'code'        => 'required|string|max:20',
             'description' => 'nullable|string',
         ]);
 
-        // Check for duplicate name/code within the same program (excluding current)
-        $exists = Level::where('program_id', $request->program_id)
-            ->where('id', '!=', $level->id)
-            ->where(function($query) use ($request) {
-                $query->where('name', $request->name)
-                      ->orWhere('code', $request->code);
+        $name = $request->name;
+        $code = strtoupper($request->code);
+
+        // Skip the current record when checking for duplicates
+        $duplicate = Level::where('id', '!=', $level->id)
+            ->where(function ($q) use ($name, $code) {
+                $q->where('name', $name)->orWhere('code', $code);
             })
             ->exists();
 
-        if ($exists) {
-            return back()->withErrors(['name' => 'Level name or code already exists for this program.'])->withInput();
+        if ($duplicate) {
+            return back()
+                ->withErrors(['name' => 'Level name or code already exists.'])
+                ->withInput();
         }
 
         $level->update([
-            'program_id' => $request->program_id,
-            'name' => $request->name,
-            'code' => strtoupper($request->code),
-            'level_order' => $request->level_order,
+            'name'        => $name,
+            'code'        => $code,
             'description' => $request->description,
         ]);
 
         return back()->with('success', 'Level updated successfully');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($encryptedId)
     {
         $this->checkAdmin();
-        
+
         try {
             $id = Crypt::decrypt($encryptedId);
             $level = Level::findOrFail($id);
-            $levelName = $level->name;
+            $name = $level->name;
+
             $level->delete();
-            
-            return redirect()->route('levels.index')
-                ->with('success', "Level '{$levelName}' deleted successfully.");
+
+            return redirect()
+                ->route('levels.index')
+                ->with('success', "Level '{$name}' deleted successfully.");
         } catch (\Exception $e) {
             abort(404);
         }

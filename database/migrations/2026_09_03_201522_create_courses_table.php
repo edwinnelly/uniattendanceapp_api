@@ -14,17 +14,17 @@ return new class extends Migration
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('department_id');
-            $table->unsignedBigInteger('level_id')->nullable(); // Optional: for specific level
+            $table->unsignedBigInteger('lecturer_id')->nullable();
             $table->string('code', 20)->unique();
             $table->string('title', 200);
             $table->text('description')->nullable();
             $table->integer('credit_hours')->default(3);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             // Indexes
             $table->index('department_id');
-            $table->index('level_id');
+            // $table->index('level_id');
             $table->index('code');
             $table->index('is_active');
         });

@@ -45,6 +45,9 @@
                     fontFamily: {
                         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
                     },
+                    boxShadow: {
+                        card: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+                    },
                 }
             }
         }
@@ -238,9 +241,12 @@
                     <p class="text-sm text-fluent-secondary mt-1">Department Details</p>
                 </div>
                 <div class="flex gap-3">
-                    
                     <a href="{{ route('admin.departments.index') }}"
                         class="btn-sleek inline-flex items-center justify-center gap-2 px-5 py-3 text-fluent-text bg-white border border-fluent-border rounded-xl text-sm font-semibold tracking-wide hover:bg-fluent-bg">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
                         Back
                     </a>
                 </div>
@@ -260,6 +266,20 @@
                         </p>
                         <span
                             class="px-3 py-1 bg-fluent-lightBlue text-fluent-blue rounded-lg text-sm font-bold">{{ $department->code }}</span>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-bold text-fluent-secondary uppercase tracking-wider mb-1">Faculty</p>
+                        <p class="text-lg font-semibold text-fluent-text">
+                            {{ $department->faculty->name ?? 'Not Assigned' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-bold text-fluent-secondary uppercase tracking-wider mb-1">Duration</p>
+                        <p class="text-lg font-semibold text-fluent-text">
+                            {{ $department->duration_years ?? 4 }} {{ Str::plural('Year', $department->duration_years ?? 4) }}
+                        </p>
                     </div>
 
                     <div>

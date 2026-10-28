@@ -314,7 +314,7 @@
                         <span class="text-sm font-semibold text-fluent-text">Levels</span>
                     </div>
                     <h1 class="text-3xl font-extrabold text-fluent-text tracking-tight">Levels</h1>
-                    <p class="text-sm text-fluent-secondary mt-1">Manage academic levels for programs</p>
+                    <p class="text-sm text-fluent-secondary mt-1">Manage academic levels</p>
                 </div>
                 <a href="{{ route('levels.create') }}"
                     class="btn-sleek btn-sleek-primary inline-flex items-center justify-center gap-2 px-5 py-3 text-white rounded-xl text-sm font-semibold tracking-wide">
@@ -347,12 +347,10 @@
                     <thead>
                         <tr>
                             <th>S/N</th>
-                            <th>Level</th>
+                            <th>Name</th>
                             <th>Code</th>
-                            <th>Program</th>
-                            <th>Level Order</th>
-                            <th>Students</th>
-                            <th>Courses</th>
+                            <th>Description</th>
+                            <th>Created</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -365,19 +363,15 @@
                                 </td>
                                 <td>
                                     <span
-                                        class="px-2.5 py-1 bg-fluent-lightBlue text-fluent-blue rounded-md text-xs font-bold">{{ $level->code }}</span>
+                                        class="px-2.5 py-1 bg-fluent-lightBlue text-fluent-blue rounded-md text-xs font-bold">
+                                        {{ $level->code }}
+                                    </span>
                                 </td>
-                                <td class="text-sm">
-                                    {{ $level->program ? $level->program->name : 'N/A' }}
+                                <td class="text-sm text-fluent-secondary">
+                                    {{ $level->description ? \Illuminate\Support\Str::limit($level->description, 80) : '—' }}
                                 </td>
-                                <td class="text-sm font-semibold">
-                                    {{ $level->level_order }}
-                                </td>
-                                <td class="text-sm font-semibold">
-                                    {{ $level->students_count ?? 0 }}
-                                </td>
-                                <td class="text-sm">
-                                    {{ $level->courses_count ?? 0 }}
+                                <td class="text-sm text-fluent-secondary">
+                                    {{ $level->created_at?->format('M d, Y') }}
                                 </td>
                                 <td>
                                     <div class="flex gap-1">

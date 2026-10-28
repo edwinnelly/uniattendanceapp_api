@@ -20,6 +20,9 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
+            $table->unsignedBigInteger('faculty_id')->nullable();
+            $table->integer('duration_years')->default(4);
+
             $table->index('code');
             $table->index('is_active');
             $table->index('head_id');

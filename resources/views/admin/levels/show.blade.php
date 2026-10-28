@@ -103,13 +103,8 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         @keyframes slideUp {
@@ -117,7 +112,6 @@
                 opacity: 0;
                 transform: translateY(20px) scale(0.95);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -268,21 +262,6 @@
                             class="px-3 py-1 bg-fluent-lightBlue text-fluent-blue rounded-lg text-sm font-bold">{{ $level->code }}</span>
                     </div>
 
-                    <div>
-                        <p class="text-xs font-bold text-fluent-secondary uppercase tracking-wider mb-1">Program</p>
-                        <p class="text-lg font-semibold text-fluent-text">
-                            {{ $level->program ? $level->program->name : 'N/A' }}
-                        </p>
-                        @if ($level->program)
-                            <p class="text-sm text-fluent-secondary">{{ $level->program->code }}</p>
-                        @endif
-                    </div>
-
-                    <div>
-                        <p class="text-xs font-bold text-fluent-secondary uppercase tracking-wider mb-1">Level Order</p>
-                        <p class="text-lg font-semibold text-fluent-text">{{ $level->level_order }}</p>
-                    </div>
-
                     <div class="col-span-1 md:col-span-2">
                         <p class="text-xs font-bold text-fluent-secondary uppercase tracking-wider mb-1">Description</p>
                         <p class="text-sm text-fluent-text">{{ $level->description ?? 'No description provided' }}</p>
@@ -300,15 +279,17 @@
                 </div>
             </div>
 
-            <!-- Statistics Cards -->
+            <!-- Metadata Card -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div class="bg-white rounded-2xl p-6 border border-fluent-border text-center">
-                    <p class="text-3xl font-extrabold text-fluent-blue">{{ $level->students_count ?? 0 }}</p>
-                    <p class="text-sm text-fluent-secondary mt-1">Students</p>
+                    <p class="text-3xl font-extrabold text-fluent-blue">#Q1203{{ $level->id }}23A2</p>
+                    <p class="text-sm text-fluent-secondary mt-1">Record ID</p>
                 </div>
                 <div class="bg-white rounded-2xl p-6 border border-fluent-border text-center">
-                    <p class="text-3xl font-extrabold text-purple-600">{{ $level->courses_count ?? 0 }}</p>
-                    <p class="text-sm text-fluent-secondary mt-1">Courses</p>
+                    <p class="text-3xl font-extrabold text-blue-600">
+                        {{ $level->created_at->diffForHumans() }}
+                    </p>
+                    <p class="text-sm text-fluent-secondary mt-1">Age</p>
                 </div>
             </div>
 
@@ -317,7 +298,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-lg font-bold text-fluent-text">Please Note</h3>
-                        <p class="text-sm text-fluent-secondary mt-1">Permanently delete this level and all associated data.</p>
+                        <p class="text-sm text-fluent-secondary mt-1">Permanently delete this level. This action cannot be undone.</p>
                     </div>
                     <button onclick="openDeleteModal()"
                         class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-all">
@@ -379,7 +360,7 @@
                         <div>
                             <p class="text-xs font-semibold text-amber-700">Warning</p>
                             <p class="text-xs text-amber-600 mt-1">
-                                {{ $level->students_count ?? 0 }} students and {{ $level->courses_count ?? 0 }} courses are associated with this level.
+                                This level will be permanently removed from the system.
                             </p>
                         </div>
                     </div>
@@ -449,30 +430,41 @@
         const mobileRightToggle = document.getElementById('mobileRightToggle');
 
         function closeAllSidebars() {
-            sidebarLeft.classList.remove('open');
-            sidebarRight.classList.remove('open');
-            overlay.classList.remove('active');
-            overlay.style.display = 'none';
+            if (sidebarLeft) sidebarLeft.classList.remove('open');
+            if (sidebarRight) sidebarRight.classList.remove('open');
+            if (overlay) {
+                overlay.classList.remove('active');
+                overlay.style.display = 'none';
+            }
         }
 
         function openSidebar(sidebar) {
             closeAllSidebars();
+            if (!sidebar) return;
             sidebar.classList.add('open');
-            overlay.style.display = 'block';
-            setTimeout(() => overlay.classList.add('active'), 10);
+            if (overlay) {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.classList.add('active'), 10);
+            }
         }
 
-        mobileToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
-        });
+        if (mobileToggle && sidebarLeft) {
+            mobileToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarLeft.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarLeft);
+            });
+        }
 
-        mobileRightToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
-        });
+        if (mobileRightToggle && sidebarRight) {
+            mobileRightToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebarRight.classList.contains('open') ? closeAllSidebars() : openSidebar(sidebarRight);
+            });
+        }
 
-        overlay.addEventListener('click', closeAllSidebars);
+        if (overlay) {
+            overlay.addEventListener('click', closeAllSidebars);
+        }
     </script>
 </body>
 

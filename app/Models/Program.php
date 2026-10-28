@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'department_id',
     'name',
+    'faculty_id',
     'code',
     'duration_years',
     'description',
